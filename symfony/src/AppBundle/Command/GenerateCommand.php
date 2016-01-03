@@ -30,5 +30,18 @@ class GenerateCommand extends ContainerAwareCommand
             FROM `md5_map`
             LIMIT $limit;
 ");
+
+        $collisions = $connection->fetchAll('
+            SELECT `to`, COUNT(*) FROM `md5_map`
+            GROUP BY `to`
+            HAVING COUNT(*) > 1;
+        ');
+
+        if ($collisions) {
+            $count = count($collisions);
+            $output->writeln("<info>Find: $count</info>");
+        } else {
+            $output->writeln("<info>Process</info>");
+        }
     }
 }
