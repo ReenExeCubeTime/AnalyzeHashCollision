@@ -24,12 +24,19 @@ class GenerateCommand extends ContainerAwareCommand
         /* @var $connection Connection */
         $connection = $this->getContainer()->get('doctrine')->getConnection();
 
-        $connection->exec("
+        $result = $connection->executeQuery("
             REPLACE INTO `md5_map` (`from`, `to`)
             SELECT `to`, MD5(`to`)
             FROM `md5_map`
+            WHERE `to` NOT IN (
+              SELECT `from` FROM `md5_map`
+            )
             LIMIT $limit;
-");
+        ");
+
+        $added = $result->rowCount();
+
+        $output->writeln("<info>Added: $added</info>");
 
         $collisions = $connection->fetchAll('
             SELECT `to`, COUNT(*) FROM `md5_map`
